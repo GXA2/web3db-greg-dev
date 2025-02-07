@@ -1,0 +1,49 @@
+version: '3.8'
+services:
+  node1:
+    image: cockroachdb/cockroach:v22.2.8
+    container_name: node1
+    command: >
+      start --insecure
+      --join=node1,node2
+      --listen-addr=node1
+      --http-addr=node1
+      --cache=.25
+      --max-sql-memory=.25
+    hostname: node1
+    restart: unless-stopped
+    ports:
+      - "${CRDB_SQL_PORT}:26257"      # SQL
+      - "${CRDB_HTTP_PORT}:8080"     # Admin UI
+    volumes:
+      - cockroachdb_store_node1:/cockroach/cockroach-data
+    networks:
+      - crdbnet
+
+  node2:
+    image: cockroachdb/cockroach:v22.2.8
+    container_name: node2
+    command: >
+      start --insecure
+      --join=node1,node2
+      --listen-addr=node2
+      --http-addr=node2
+      --cache=.25
+      --max-sql-memory=.25
+    hostname: node2
+    restart: unless-stopped
+    ports:
+      # Only needed if you want direct external access from host to node2
+      - "26258:26257"
+      - "8081:8080"
+    volumes:
+      - cockroachdb_store_node2:/cockroach/cockroach-data
+    networks:
+      - crdbnet
+
+volumes:
+  cockroachdb_store_node1:
+  cockroachdb_store_node2:
+
+networks:
+  crdbnet:
